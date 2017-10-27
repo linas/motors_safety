@@ -37,7 +37,7 @@ class Safety():
         # Dynamixel loads
         self.motor_loads = [0]*256
         # Create proxy topics and subscribers
-        for m in motors:
+        for m in motors.values():
             self.motor_positions[m['name']] = m['default']
             self.motors[m['name']] = m
             if not m['topic'] in self.publishers.keys():
