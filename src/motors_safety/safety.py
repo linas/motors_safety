@@ -22,7 +22,7 @@ class Safety():
         self.topics = []
         # Wait for motors to be loaded in param server
         time.sleep(3)
-        motors = rospy.get_param('motors')
+        self.motors = rospy.get_param('motors')
         self.rules = rospy.get_param('safety_rules', {})
         self.initialized = False
 
@@ -30,16 +30,14 @@ class Safety():
         self.motor_positions = {}
         self.subscribers = {}
         self.publishers = {}
-        self.motors = {}
         self.timers = {}
         self.motors_msgs = {}
         self.corrections = {}
         # Dynamixel loads
         self.motor_loads = [0]*256
         # Create proxy topics and subscribers
-        for m in motors:
+        for (name, m) in self.motors.items():
             self.motor_positions[m['name']] = m['default']
-            self.motors[m['name']] = m
             if not m['topic'] in self.publishers.keys():
                 # Pololu motor if motor_id is specified
                 if m['hardware'] == 'pololu':
@@ -50,7 +48,6 @@ class Safety():
                     self.publishers[m['topic']] = rospy.Publisher("safe/"+m['topic']+"_controller/command",Float64, queue_size=30)
                     self.subscribers[m['topic']] = rospy.Subscriber(m['topic']+"_controller/command", Float64,
                                         lambda msg, m=m: self.callback(m, True, msg))
-
 
         # Making corrections
         self.correction_sub = rospy.Subscriber("add_correction", MotorCommand, self.correction_cb)
@@ -146,8 +143,7 @@ class Safety():
         try:
             rule['target'].blend()
         except ValueError as ex:
-            logger.error(ex)
-            logger.error(traceback.format_exc())
+            pass
         v = rule['target'].current
         return v
 
@@ -168,8 +164,7 @@ class Safety():
         try:
             self.rules[m][rule]['target'].blend()
         except ValueError as ex:
-            logger.error(ex)
-            logger.error(traceback.format_exc())
+            pass
         # Ensure the minimum commands are sent by ROS rate.
         if self.rules[m][rule]['target'].dt > (1.0/float(ROS_RATE)-0.01):
             self.set_motor_abs_pos(m, self.rules[m][rule]['target'].current)
