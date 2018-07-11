@@ -6,7 +6,7 @@ from functools import partial
 from mock import *
 
 import rospy
-from ros_pololu.msg import *
+from hr_msgs.msg import *
 from std_msgs.msg import Float64
 from motors_safety import Safety
 from dynamixel_msgs.msg import *

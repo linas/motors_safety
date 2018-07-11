@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 
-import rospy
-from ros_pololu.msg import MotorCommand
-from std_msgs.msg import Float64, String
-from dynamixel_msgs.msg import MotorStateList
-import blendedNum
-from blendedNum.plumbing import Pipes
-from realsense_ros.cfg import TrackerConfig
 import math
-
 import time
 import traceback
 import logging
+
+import rospy
+import blendedNum
+from blendedNum.plumbing import Pipes
+from dynamixel_msgs.msg import MotorStateList
+from hr_msgs.msg import MotorCommand
+from std_msgs.msg import Float64, String
 
 ROS_RATE = 25
 
