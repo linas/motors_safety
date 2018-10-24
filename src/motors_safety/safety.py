@@ -11,6 +11,7 @@ from blendedNum.plumbing import Pipes
 from dynamixel_msgs.msg import MotorStateList
 from hr_msgs.msg import MotorCommand
 from std_msgs.msg import Float64, String
+from roodle_ros.msg import TargetPosture
 
 ROS_RATE = 25
 
@@ -36,22 +37,25 @@ class Safety():
         self.motor_loads = [0]*256
         # Create proxy topics and subscribers
         for (name, m) in self.motors.items():
+            if not ('default' in m):
+                del self.motors[name]
+                continue
             self.motor_positions[m['name']] = m['default']
             if not m['topic'] in self.publishers.keys():
                 # Pololu motor if motor_id is specified
                 if m['hardware'] == 'pololu':
                     self.publishers[m['topic']] = rospy.Publisher("safe/"+m['topic']+"/command",MotorCommand, queue_size=30)
                     self.subscribers[m['topic']] = rospy.Subscriber(m['topic']+"/command", MotorCommand,
-                                    lambda msg,m=m: self.callback(m, False, msg))
-                else:
-                    self.publishers[m['topic']] = rospy.Publisher("safe/"+m['topic']+"_controller/command",Float64, queue_size=30)
-                    self.subscribers[m['topic']] = rospy.Subscriber(m['topic']+"_controller/command", Float64,
-                                        lambda msg, m=m: self.callback(m, True, msg))
-
+                                    lambda msg,m=m: self.callback(m, 0, msg))
+        # Single topic for all dynamixel motors
+        self.subscribers['dynamixel'] = rospy.Subscriber("dynamixels", TargetPosture,
+                                        lambda msg: self.callback(None, 2, msg))
+        self.publishers['dynamixel'] = rospy.Publisher("targetPosture", TargetPosture,
+                                                      queue_size=30)
         # Making corrections
         self.correction_sub = rospy.Subscriber("add_correction", MotorCommand, self.correction_cb)
         # Subscribe motor states
-        rospy.Subscriber('safe/motor_states', MotorStateList, self.update_load)
+#       rospy.Subscriber('safe/motor_states', MotorStateList, self.update_load)
         # Pauses motor sync while in config mode
         self.sync = True
         rospy.Subscriber("pololu_sync", String, self.pause_sync)
@@ -96,21 +100,33 @@ class Safety():
         # Republish message to safe topic
         if not self.initialized:
             return
+        if not motor:
+            # Multiple dynamixels. Do not process rules then
+            if dynamixel == 2:
+                self.publishers['dynamixel'].publish(msg)
+                return
+            return
         mname = motor['name']
-        if not dynamixel:
+        if dynamixel == 0:
             mname = msg.joint_name
         if mname in self.rules.keys():
             self.process_rules(mname, dynamixel, msg)
-        if dynamixel:
+        if dynamixel == 1:
             v = msg.data
         else:
             v = msg.position
         self.motor_positions[mname] = v
         self.motors_msgs[mname] = msg
+        if dynamixel == 1:
+            tp = TargetPosture()
+            tp.values.append(v)
+            tp.names.append(mname)
+            self.publishers['dynamixel'].publish(tp)
+            return
         self.publishers[motor['topic']].publish(msg)
 
     def process_rules(self, motor, dynamixel, msg):
-        if dynamixel:
+        if dynamixel == 1:
             v = msg.data
         else:
             v = msg.position
@@ -130,7 +146,7 @@ class Safety():
                 v = self.rule_smooth(v, r)
             if r['type'] == 'sine':
                 v = self.rule_sine(v, r)
-        if dynamixel:
+        if dynamixel == 1:
             msg.data = v
         else:
             msg.position = v
