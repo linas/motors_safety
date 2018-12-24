@@ -1,4 +1,3 @@
-# Copyright (c) 2013-2018 Hanson Robotics, Ltd, all rights reserved. 
 # `blendedNum` Package #
 
 A collections of 'Blended' numbers, numbers that change over time according to
@@ -89,3 +88,5 @@ def plot_blendedNum(num, duration, dt):
   plt.xlabel('seconds')
   plt.show()
 ```
+
+## Copyright (c) 2013-2018 Hanson Robotics, Ltd, all rights reserved.

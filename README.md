@@ -1,11 +1,10 @@
-# Copyright (c) 2013-2018 Hanson Robotics, Ltd, all rights reserved. 
 # motors_safety
 Safety Layer for robot
 ### Current Rules
 
 ###### Config
 Reads the `safety_rules` and `motors` params from param server in current namespace.
-`motors` param is global between the HR ROS nodes and it has configs for all 
+`motors` param is global between the HR ROS nodes and it has configs for all
 `safety_rules` param should be specified in [robots_config](https://github.com/hansonrobotics/robots_config) package `config.yaml` for the specific robot.
 
 ##### Prevent from conflicting extreme position:
@@ -51,8 +50,12 @@ safety_rules:
           t1: 1
           t2: 4
 ```
-`motor_id` specifies the dynamixel motor_id, `extreme` motor load. `rest` the desired load in the rest mode. If motor stays under `extreme` load for more than `t1` time , then this rule will move motor towards neutral position until  the rest laod is reached and will stay in `rest` load for `t2` time.
- 
+`motor_id` specifies the dynamixel motor_id, `extreme` motor load.
+`rest` the desired load in the rest mode. If motor stays under
+`extreme` load for more than `t1` time , then this rule will move
+motor towards neutral position until  the rest load is reached
+and will stay in `rest` load for `t2` time.
+
 ### Planned features
 
  * Allow extreme positions only for certain amount of time
@@ -71,3 +74,5 @@ safety_rules:
 
 ### Physics Testing (long term plan)
  * Test the skin physics
+
+## Copyright (c) 2013-2018 Hanson Robotics, Ltd, all rights reserved.
